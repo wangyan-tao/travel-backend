@@ -57,7 +57,8 @@ public class OssService {
             DefaultPutRet putRet = new Gson().fromJson(response.bodyString(), DefaultPutRet.class);
             log.info("文件上传成功: key={}, hash={}", putRet.key, putRet.hash);
             
-            return domain + "/" + putRet.key;
+            String base = normalizeDomain(domain);
+            return base + "/" + putRet.key;
         } catch (QiniuException ex) {
             log.error("七牛云上传异常: {}", ex.getMessage());
             throw new BusinessException("文件上传失败: " + ex.getMessage());
@@ -73,5 +74,16 @@ public class OssService {
     private String getUpToken() {
         Auth auth = Auth.create(accessKey, secretKey);
         return auth.uploadToken(bucket);
+    }
+
+    private String normalizeDomain(String d) {
+        if (d == null || d.trim().isEmpty()) {
+            throw new BusinessException("未配置对象存储域名");
+        }
+        String trimmed = d.trim();
+        if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+            return trimmed.replaceAll("/+$", "");
+        }
+        return ("http://" + trimmed).replaceAll("/+$", "");
     }
 }
