@@ -57,7 +57,13 @@ public class OssService {
             DefaultPutRet putRet = new Gson().fromJson(response.bodyString(), DefaultPutRet.class);
             log.info("文件上传成功: key={}, hash={}", putRet.key, putRet.hash);
             
-            return domain + "/" + putRet.key;
+            // 确保返回完整的URL（包含协议）
+            String url = domain + "/" + putRet.key;
+            if (!url.startsWith("http://") && !url.startsWith("https://")) {
+                url = "https://" + url;
+            }
+            log.info("返回文件URL: {}", url);
+            return url;
         } catch (QiniuException ex) {
             log.error("七牛云上传异常: {}", ex.getMessage());
             throw new BusinessException("文件上传失败: " + ex.getMessage());

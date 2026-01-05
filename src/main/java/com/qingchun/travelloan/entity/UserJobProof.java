@@ -92,4 +92,16 @@ public class UserJobProof implements Serializable {
     @TableField("updated_at")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updatedAt;
+
+    /**
+     * 关联查询字段：岗位名称（不映射到数据库）
+     */
+    @TableField(exist = false)
+    private String jobTitle;
+
+    /**
+     * 关联查询字段：公司名称（不映射到数据库）
+     */
+    @TableField(exist = false)
+    private String companyName;
 }
