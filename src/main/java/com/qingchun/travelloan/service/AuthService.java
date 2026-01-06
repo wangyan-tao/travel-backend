@@ -126,4 +126,13 @@ public class AuthService {
         }
         return user;
     }
+
+    /**
+     * 用户退出登录
+     */
+    public void logout(Long userId) {
+        log.info("用户退出登录: userId={}", userId);
+        // JWT是无状态的，这里主要记录日志
+        // 如果需要实现token黑名单，可以在这里添加逻辑
+    }
 }

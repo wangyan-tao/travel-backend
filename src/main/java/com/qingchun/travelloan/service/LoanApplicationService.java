@@ -99,6 +99,53 @@ public class LoanApplicationService {
     }
 
     /**
+     * 创建贷款申请
+     */
+    public LoanApplication createApplication(Long userId, Long productId, 
+                                             java.math.BigDecimal applyAmount, 
+                                             Integer applyTerm, 
+                                             String purpose) {
+        // 验证产品是否存在且可用
+        LoanProduct product = loanProductMapper.selectById(productId);
+        if (product == null) {
+            throw new BusinessException("产品不存在");
+        }
+        if (!"ACTIVE".equals(product.getStatus())) {
+            throw new BusinessException("该产品暂不可用");
+        }
+
+        // 验证申请金额是否在范围内
+        if (applyAmount.compareTo(product.getMinAmount()) < 0 || 
+            applyAmount.compareTo(product.getMaxAmount()) > 0) {
+            throw new BusinessException(
+                String.format("申请金额必须在 %s 到 %s 之间", 
+                    product.getMinAmount(), product.getMaxAmount()));
+        }
+
+        // 验证申请期限是否在范围内
+        if (applyTerm < product.getMinTerm() || applyTerm > product.getMaxTerm()) {
+            throw new BusinessException(
+                String.format("申请期限必须在 %d 到 %d 个月之间", 
+                    product.getMinTerm(), product.getMaxTerm()));
+        }
+
+        // 创建申请
+        LoanApplication application = new LoanApplication();
+        application.setUserId(userId);
+        application.setProductId(productId);
+        application.setApplyAmount(applyAmount);
+        application.setApplyTerm(applyTerm);
+        application.setPurpose(purpose);
+        application.setStatus("PENDING");
+        application.setApplyTime(LocalDateTime.now());
+        application.setCreatedAt(LocalDateTime.now());
+        application.setUpdatedAt(LocalDateTime.now());
+
+        loanApplicationMapper.insert(application);
+        return application;
+    }
+
+    /**
      * 申请DTO（包含产品名称）
      */
     public static class LoanApplicationDTO {

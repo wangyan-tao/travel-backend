@@ -6,10 +6,7 @@ import com.qingchun.travelloan.vo.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -29,5 +26,12 @@ public class LoanProductController {
             @RequestParam(required = false, defaultValue = "6") Integer size) {
         List<LoanProduct> products = loanProductService.listLoanProducts(productType, page, size);
         return Result.success(products);
+    }
+
+    @Operation(summary = "获取贷款产品详情")
+    @GetMapping("/{id}")
+    public Result<LoanProduct> getLoanProduct(@PathVariable Long id) {
+        LoanProduct product = loanProductService.getProductById(id);
+        return Result.success(product);
     }
 }

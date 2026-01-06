@@ -1,5 +1,6 @@
 package com.qingchun.travelloan.controller;
 
+import com.qingchun.travelloan.entity.LoanApplication;
 import com.qingchun.travelloan.service.LoanApplicationService;
 import com.qingchun.travelloan.vo.Result;
 import io.swagger.v3.oas.annotations.Operation;
@@ -49,6 +50,66 @@ public class LoanApplicationController {
         Long userId = (Long) authentication.getPrincipal();
         loanApplicationService.cancelApplication(id, userId);
         return Result.success("申请已取消");
+    }
+
+    @Operation(summary = "创建贷款申请")
+    @PostMapping("/applications")
+    public Result<LoanApplicationService.LoanApplicationDTO> createApplication(
+            @RequestBody CreateApplicationRequest request,
+            Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
+        LoanApplication application = loanApplicationService.createApplication(
+            userId,
+            request.getProductId(),
+            request.getApplyAmount(),
+            request.getApplyTerm(),
+            request.getPurpose()
+        );
+        
+        LoanApplicationService.LoanApplicationDTO dto = loanApplicationService.getApplicationById(application.getId(), userId);
+        return Result.success(dto);
+    }
+
+    /**
+     * 创建申请请求DTO
+     */
+    public static class CreateApplicationRequest {
+        private Long productId;
+        private java.math.BigDecimal applyAmount;
+        private Integer applyTerm;
+        private String purpose;
+
+        public Long getProductId() {
+            return productId;
+        }
+
+        public void setProductId(Long productId) {
+            this.productId = productId;
+        }
+
+        public java.math.BigDecimal getApplyAmount() {
+            return applyAmount;
+        }
+
+        public void setApplyAmount(java.math.BigDecimal applyAmount) {
+            this.applyAmount = applyAmount;
+        }
+
+        public Integer getApplyTerm() {
+            return applyTerm;
+        }
+
+        public void setApplyTerm(Integer applyTerm) {
+            this.applyTerm = applyTerm;
+        }
+
+        public String getPurpose() {
+            return purpose;
+        }
+
+        public void setPurpose(String purpose) {
+            this.purpose = purpose;
+        }
     }
 }
 

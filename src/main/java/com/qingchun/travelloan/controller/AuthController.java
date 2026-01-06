@@ -57,4 +57,17 @@ public class AuthController {
         User user = authService.getCurrentUser(userId);
         return Result.success(user);
     }
+
+    /**
+     * 用户退出登录
+     */
+    @Operation(summary = "用户退出登录")
+    @PostMapping("/logout")
+    public Result<Void> logout(Authentication authentication) {
+        if (authentication != null && authentication.getPrincipal() != null) {
+            Long userId = (Long) authentication.getPrincipal();
+            authService.logout(userId);
+        }
+        return Result.success("退出登录成功");
+    }
 }
