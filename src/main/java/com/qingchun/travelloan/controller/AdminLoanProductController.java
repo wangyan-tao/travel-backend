@@ -44,7 +44,7 @@ public class AdminLoanProductController {
     @Operation(summary = "根据ID获取产品详情")
     @GetMapping("/{id}")
     public Result<LoanProduct> getProduct(@PathVariable Long id) {
-        LoanProduct product = loanProductService.getProductById(id);
+        LoanProduct product = loanProductService.getProductById(id, null);
         return Result.success(product);
     }
 

@@ -2,11 +2,14 @@ package com.qingchun.travelloan.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.qingchun.travelloan.entity.LoanProduct;
+import com.qingchun.travelloan.entity.UserCertificate;
 import com.qingchun.travelloan.exception.BusinessException;
 import com.qingchun.travelloan.mapper.LoanProductMapper;
+import com.qingchun.travelloan.mapper.UserCertificateMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -21,10 +24,13 @@ public class LoanProductService {
     @Autowired
     private LoanProductMapper loanProductMapper;
 
+    @Autowired
+    private UserCertificateMapper userCertificateMapper;
+
     /**
      * 获取贷款产品列表（用户端，只返回上架产品）
      */
-    public List<LoanProduct> listLoanProducts(String productType, Integer page, Integer size) {
+    public List<LoanProduct> listLoanProducts(String productType, Integer page, Integer size, Long userId) {
         int currentPage = page == null || page < 1 ? 1 : page;
         int pageSize = size == null || size < 1 ? 6 : size;
         QueryWrapper<LoanProduct> wrapper = new QueryWrapper<>();
@@ -35,7 +41,16 @@ public class LoanProductService {
         wrapper.orderByAsc("id");
         int offset = (currentPage - 1) * pageSize;
         wrapper.last("LIMIT " + offset + "," + pageSize);
-        return loanProductMapper.selectList(wrapper);
+        List<LoanProduct> products = loanProductMapper.selectList(wrapper);
+        
+        // 如果用户已登录且有两条审批通过的证书，利率降低1%
+        if (userId != null && hasTwoApprovedCertificates(userId)) {
+            for (LoanProduct product : products) {
+                adjustInterestRate(product);
+            }
+        }
+        
+        return products;
     }
 
     /**
@@ -84,11 +99,17 @@ public class LoanProductService {
     /**
      * 根据ID获取产品
      */
-    public LoanProduct getProductById(Long id) {
+    public LoanProduct getProductById(Long id, Long userId) {
         LoanProduct product = loanProductMapper.selectById(id);
         if (product == null) {
             throw new BusinessException("产品不存在");
         }
+        
+        // 如果用户已登录且有两条审批通过的证书，利率降低1%
+        if (userId != null && hasTwoApprovedCertificates(userId)) {
+            adjustInterestRate(product);
+        }
+        
         return product;
     }
 
@@ -123,7 +144,7 @@ public class LoanProductService {
      * 更新产品
      */
     public LoanProduct updateProduct(Long id, LoanProduct product) {
-        LoanProduct existing = getProductById(id);
+        LoanProduct existing = getProductById(id, null);
         
         // 验证必填字段
         validateProduct(product);
@@ -149,7 +170,7 @@ public class LoanProductService {
      * 上架产品
      */
     public void activateProduct(Long id) {
-        LoanProduct product = getProductById(id);
+        LoanProduct product = getProductById(id, null);
         // 如果数据库status是TINYINT，使用"1"，如果是VARCHAR，使用"ACTIVE"
         // 根据实际数据库schema调整
         product.setStatus("ACTIVE");
@@ -161,7 +182,7 @@ public class LoanProductService {
      * 下架产品
      */
     public void deactivateProduct(Long id) {
-        LoanProduct product = getProductById(id);
+        LoanProduct product = getProductById(id, null);
         // 如果数据库status是TINYINT，使用"0"，如果是VARCHAR，使用"INACTIVE"
         product.setStatus("INACTIVE");
         product.setUpdatedAt(LocalDateTime.now());
@@ -172,8 +193,36 @@ public class LoanProductService {
      * 删除产品
      */
     public void deleteProduct(Long id) {
-        LoanProduct product = getProductById(id);
+        // 检查产品是否存在，如果不存在会抛出异常
+        getProductById(id, null);
         loanProductMapper.deleteById(id);
+    }
+
+    /**
+     * 检查用户是否有两条审批通过的证书
+     */
+    private boolean hasTwoApprovedCertificates(Long userId) {
+        QueryWrapper<UserCertificate> wrapper = new QueryWrapper<>();
+        wrapper.eq("user_id", userId);
+        wrapper.eq("status", "APPROVED");
+        List<UserCertificate> certificates = userCertificateMapper.selectList(wrapper);
+        return certificates != null && certificates.size() >= 2;
+    }
+
+    /**
+     * 调整产品利率（降低1%）
+     */
+    private void adjustInterestRate(LoanProduct product) {
+        if (product.getInterestRate() != null) {
+            BigDecimal currentRate = product.getInterestRate();
+            BigDecimal discount = new BigDecimal("0.01"); // 1%
+            BigDecimal newRate = currentRate.subtract(discount);
+            // 确保利率不为负数
+            if (newRate.compareTo(BigDecimal.ZERO) < 0) {
+                newRate = BigDecimal.ZERO;
+            }
+            product.setInterestRate(newRate);
+        }
     }
 
     /**

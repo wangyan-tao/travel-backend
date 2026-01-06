@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.qingchun.travelloan.mapper.UserCertificateMapper">
+    
+    <select id="selectByTypeAndSourceId" resultType="com.qingchun.travelloan.entity.UserCertificate">
+        SELECT * FROM user_certificate
+        WHERE certificate_type = #{certificateType}
+        AND source_id = #{sourceId}
+        LIMIT 1
+    </select>
+    
+</mapper>
+

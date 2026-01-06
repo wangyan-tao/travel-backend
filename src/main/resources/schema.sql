@@ -244,8 +244,33 @@ CREATE TABLE IF NOT EXISTS `loan_application` (
  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='学业荣誉证明表';
 
 -- ============================================ 
- -- 12. 通知消息表 
- -- ============================================ 
+-- 12. 用户证书表（用于管理员审批）
+-- ============================================
+CREATE TABLE IF NOT EXISTS `user_certificate` (
+    `id` BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '证书ID',
+    `user_id` BIGINT NOT NULL COMMENT '用户ID',
+    `certificate_type` VARCHAR(50) NOT NULL COMMENT '证书类型：JOB_PROOF-工作证明, ACADEMIC_HONOR-学业荣誉',
+    `source_id` BIGINT NOT NULL COMMENT '来源ID（user_job_proof.id 或 academic_honor.id）',
+    `certificate_name` VARCHAR(200) NOT NULL COMMENT '证书名称',
+    `certificate_url` VARCHAR(500) COMMENT '证书文件URL',
+    `description` TEXT COMMENT '证书描述',
+    `status` VARCHAR(20) NOT NULL DEFAULT 'PENDING' COMMENT '审批状态：PENDING-待审批, APPROVED-已通过, REJECTED-已拒绝',
+    `approver_id` BIGINT COMMENT '审批人ID',
+    `approval_opinion` TEXT COMMENT '审批意见',
+    `approved_at` DATETIME COMMENT '审批时间',
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    INDEX idx_user_id (`user_id`),
+    INDEX idx_certificate_type (`certificate_type`),
+    INDEX idx_status (`status`),
+    INDEX idx_source_id (`source_id`),
+    FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`approver_id`) REFERENCES `user`(`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户证书表';
+
+-- ============================================ 
+-- 13. 通知消息表 
+-- ============================================
  CREATE TABLE IF NOT EXISTS `notification` ( 
      `id` BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '消息ID', 
      `user_id` BIGINT NOT NULL COMMENT '用户ID', 

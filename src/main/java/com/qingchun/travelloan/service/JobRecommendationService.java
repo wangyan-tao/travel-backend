@@ -4,10 +4,12 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.qingchun.travelloan.entity.PartTimeJob;
 import com.qingchun.travelloan.entity.UserJobProof;
 import com.qingchun.travelloan.entity.UserLocation;
+import com.qingchun.travelloan.entity.UserCertificate;
 import com.qingchun.travelloan.exception.BusinessException;
 import com.qingchun.travelloan.mapper.PartTimeJobMapper;
 import com.qingchun.travelloan.mapper.UserJobProofMapper;
 import com.qingchun.travelloan.mapper.UserLocationMapper;
+import com.qingchun.travelloan.mapper.UserCertificateMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -35,6 +37,9 @@ public class JobRecommendationService {
 
     @Autowired
     private UserLocationMapper userLocationMapper;
+
+    @Autowired
+    private UserCertificateMapper userCertificateMapper;
 
     /**
      * 获取兼职推荐列表
@@ -133,17 +138,51 @@ public class JobRecommendationService {
         userJobProofMapper.insert(proof);
         log.info("工作证明保存成功 - id: {}", proof.getId());
         
+        // 创建user_certificate记录
+        createUserCertificate(userId, "JOB_PROOF", proof.getId(), proof.getProofType(), proof.getProofUrl(), 
+                buildJobProofDescription(proof));
+        
         return proof;
     }
 
     /**
      * 获取用户工作证明列表（包含关联的兼职信息）
+     * 从user_certificate表查询状态并映射到verificationStatus
      */
     public List<UserJobProof> getUserJobProofs(Long userId) {
         log.info("获取用户工作证明列表 - userId: {}", userId);
         List<UserJobProof> proofs = userJobProofMapper.selectByUserIdWithJobInfo(userId);
         log.info("查询到工作证明数量: {}", proofs != null ? proofs.size() : 0);
-        return proofs != null ? proofs : java.util.Collections.emptyList();
+        
+        if (proofs == null || proofs.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+        
+        // 从user_certificate表查询状态并映射
+        for (UserJobProof proof : proofs) {
+            QueryWrapper<UserCertificate> wrapper = new QueryWrapper<>();
+            wrapper.eq("user_id", userId);
+            wrapper.eq("certificate_type", "JOB_PROOF");
+            wrapper.eq("source_id", proof.getId());
+            UserCertificate certificate = userCertificateMapper.selectOne(wrapper);
+            
+            if (certificate != null) {
+                // 将user_certificate.status映射到verificationStatus
+                String certificateStatus = certificate.getStatus();
+                if ("APPROVED".equals(certificateStatus)) {
+                    proof.setVerificationStatus("VERIFIED");
+                } else if ("REJECTED".equals(certificateStatus)) {
+                    proof.setVerificationStatus("FAILED");
+                } else {
+                    proof.setVerificationStatus("PENDING");
+                }
+            } else {
+                // 如果没有找到证书记录，默认为待核验
+                proof.setVerificationStatus("PENDING");
+            }
+        }
+        
+        return proofs;
     }
 
     /**
@@ -159,6 +198,41 @@ public class JobRecommendationService {
             throw new BusinessException("无权删除此工作证明");
         }
         userJobProofMapper.deleteById(proofId);
+    }
+
+    /**
+     * 创建user_certificate记录
+     */
+    private void createUserCertificate(Long userId, String certificateType, Long sourceId, 
+                                       String certificateName, String certificateUrl, String description) {
+        UserCertificate certificate = new UserCertificate();
+        certificate.setUserId(userId);
+        certificate.setCertificateType(certificateType);
+        certificate.setSourceId(sourceId);
+        certificate.setCertificateName(certificateName);
+        certificate.setCertificateUrl(certificateUrl);
+        certificate.setDescription(description);
+        certificate.setStatus("PENDING");
+        
+        userCertificateMapper.insert(certificate);
+        log.info("创建user_certificate记录成功 - id: {}, type: {}, sourceId: {}", 
+                certificate.getId(), certificateType, sourceId);
+    }
+
+    /**
+     * 构建工作证明描述
+     */
+    private String buildJobProofDescription(UserJobProof proof) {
+        StringBuilder desc = new StringBuilder();
+        desc.append("证明类型：").append(proof.getProofType());
+        if (proof.getMonthlyIncome() != null) {
+            desc.append("，月收入：¥").append(proof.getMonthlyIncome());
+        }
+        desc.append("，工作期间：").append(proof.getStartDate());
+        if (proof.getEndDate() != null) {
+            desc.append(" 至 ").append(proof.getEndDate());
+        }
+        return desc.toString();
     }
 }
 

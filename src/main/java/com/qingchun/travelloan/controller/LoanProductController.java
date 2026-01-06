@@ -6,6 +6,7 @@ import com.qingchun.travelloan.vo.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,15 +24,24 @@ public class LoanProductController {
     public Result<List<LoanProduct>> listLoanProducts(
             @RequestParam(required = false, name = "productType") String productType,
             @RequestParam(required = false, defaultValue = "1") Integer page,
-            @RequestParam(required = false, defaultValue = "6") Integer size) {
-        List<LoanProduct> products = loanProductService.listLoanProducts(productType, page, size);
+            @RequestParam(required = false, defaultValue = "6") Integer size,
+            Authentication authentication) {
+        Long userId = null;
+        if (authentication != null && authentication.getPrincipal() != null) {
+            userId = (Long) authentication.getPrincipal();
+        }
+        List<LoanProduct> products = loanProductService.listLoanProducts(productType, page, size, userId);
         return Result.success(products);
     }
 
     @Operation(summary = "获取贷款产品详情")
     @GetMapping("/{id}")
-    public Result<LoanProduct> getLoanProduct(@PathVariable Long id) {
-        LoanProduct product = loanProductService.getProductById(id);
+    public Result<LoanProduct> getLoanProduct(@PathVariable Long id, Authentication authentication) {
+        Long userId = null;
+        if (authentication != null && authentication.getPrincipal() != null) {
+            userId = (Long) authentication.getPrincipal();
+        }
+        LoanProduct product = loanProductService.getProductById(id, userId);
         return Result.success(product);
     }
 }
