@@ -58,5 +58,34 @@ public class RepaymentController {
         List<RepaymentRecord> records = repaymentService.getUserRepaymentRecords(userId);
         return Result.success(records);
     }
+
+    @Operation(summary = "按时间维度查询还款记录")
+    @GetMapping("/records/time-range")
+    public Result<List<RepaymentRecord>> getRepaymentRecordsByTimeRange(
+            @RequestParam(defaultValue = "ALL") String timeRange,
+            Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
+        List<RepaymentRecord> records = repaymentService.getUserRepaymentRecordsByTimeRange(userId, timeRange);
+        return Result.success(records);
+    }
+
+    @Operation(summary = "按产品分组的还款详情")
+    @GetMapping("/product-details")
+    public Result<List<RepaymentService.ProductRepaymentDetailDTO>> getProductRepaymentDetails(Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
+        List<RepaymentService.ProductRepaymentDetailDTO> details = repaymentService.getProductRepaymentDetails(userId);
+        return Result.success(details);
+    }
+
+    @Operation(summary = "提前还款测算")
+    @PostMapping("/prepay/calculate")
+    public Result<RepaymentService.PrepayCalculationDTO> calculatePrepayment(
+            @RequestParam Long applicationId,
+            @RequestParam java.math.BigDecimal prepayAmount,
+            Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
+        RepaymentService.PrepayCalculationDTO result = repaymentService.calculatePrepayment(applicationId, prepayAmount, userId);
+        return Result.success(result);
+    }
 }
 

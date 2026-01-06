@@ -15,7 +15,7 @@
       </jdbc-additional-properties>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
-    <data-source source="LOCAL" name="jdbc:mysql://117.72.99.34:13306/travel_loan?useUnicode=true&amp;characterEncoding=utf8&amp;useSSL=false&amp;serverTimezone=Asia/Shanghai&amp;allowPublicKeyRetrieval=true&amp;tinyInt1isBit=false [DEBUG]" group="​TravelLoanApplication" uuid="733fae7d-5b92-4e30-9d97-b813c5d50490">
+    <data-source source="LOCAL" name="jdbc:mysql://117.72.99.34:13306/travel_loan?useUnicode=true&amp;characterEncoding=utf8&amp;useSSL=false&amp;serverTimezone=Asia/Shanghai&amp;allowPublicKeyRetrieval=true&amp;tinyInt1isBit=false [DEBUG]" group="​TravelLoanApplication" uuid="68745f9a-d428-4591-959e-1ff86ff3e825">
       <driver-ref>mysql.8</driver-ref>
       <synchronize>true</synchronize>
       <imported>true</imported>
