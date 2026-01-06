@@ -19,7 +19,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -129,6 +128,12 @@ public class RepaymentService {
 
         return applications.stream()
                 .flatMap(app -> {
+                    // 获取产品信息
+                    LoanProduct product = loanProductMapper.selectById(app.getProductId());
+                    String productName = product != null && product.getProductName() != null 
+                            ? product.getProductName() 
+                            : "未知产品";
+                    
                     QueryWrapper<RepaymentPlan> planWrapper = new QueryWrapper<>();
                     planWrapper.eq("application_id", app.getId())
                             .orderByAsc("period_number");
@@ -138,11 +143,16 @@ public class RepaymentService {
                         dto.setPlan(plan);
                         dto.setApplicationId(app.getId());
                         dto.setLoanAmount(app.getLoanAmount() != null ? app.getLoanAmount() : app.getApplyAmount());
+                        dto.setProductName(productName);
                         return dto;
                     });
                 })
                 .sorted((a, b) -> {
-                    // 按应还日期排序
+                    // 先按产品名称排序，然后按应还日期排序
+                    int productCompare = a.getProductName().compareTo(b.getProductName());
+                    if (productCompare != 0) {
+                        return productCompare;
+                    }
                     if (a.getPlan().getDueDate().equals(b.getPlan().getDueDate())) {
                         return a.getPlan().getPeriodNumber().compareTo(b.getPlan().getPeriodNumber());
                     }
@@ -450,6 +460,7 @@ public class RepaymentService {
         private RepaymentPlan plan;
         private Long applicationId;
         private BigDecimal loanAmount;
+        private String productName;
 
         public RepaymentPlan getPlan() {
             return plan;
@@ -473,6 +484,14 @@ public class RepaymentService {
 
         public void setLoanAmount(BigDecimal loanAmount) {
             this.loanAmount = loanAmount;
+        }
+
+        public String getProductName() {
+            return productName;
+        }
+
+        public void setProductName(String productName) {
+            this.productName = productName;
         }
     }
 
