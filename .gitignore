@@ -1,0 +1,43 @@
+# built application files
+*.apk
+*.ap_
+
+# files for the dex VM
+*.dex
+
+# Java class files
+*.class
+*.log
+
+# generated files
+gen/
+
+# Local configuration file (sdk path, etc)
+local.properties
+
+# Eclipse project files
+.classpath
+.project
+
+# IDEA project files
+*.iml
+.idea/
+target/
+YHFund_MSA/
+# others
+ant.properties
+build.xml
+META-INF
+scconfig
+*.ctrl
+*.dat
+*.lck
+nacos/
+/**/.flattened-pom.xml
+/application.pid
+/application.port
+/logs/
+git.properties
+
+/**/logback-spring.xml
+
