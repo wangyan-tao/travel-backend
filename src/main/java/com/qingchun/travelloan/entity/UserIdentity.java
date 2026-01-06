@@ -57,6 +57,19 @@ public class UserIdentity implements Serializable {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime verifiedAt;
     
+    @TableField("evaluation_completed")
+    private Boolean evaluationCompleted;
+    
+    @TableField("evaluation_score")
+    private Integer evaluationScore;
+    
+    @TableField("evaluation_level")
+    private String evaluationLevel;
+    
+    @TableField("evaluation_completed_at")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime evaluationCompletedAt;
+    
     @TableField("created_at")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
