@@ -38,30 +38,28 @@ public class JobRecommendationService {
 
     /**
      * 获取兼职推荐列表
-     * 优先使用用户位置信息，如果没有则使用传入的参数
+     * 强制使用用户认证时保存的城市信息，只显示和用户认证城市相同的兼职
      */
-    public List<PartTimeJob> getRecommendations(Long userId, String city, String district, String jobType, String status) {
-        // 如果未传入城市，尝试从用户位置信息获取
-        if (city == null || city.isEmpty()) {
-            UserLocation location = userLocationMapper.selectByUserId(userId);
-            if (location != null) {
-                city = location.getCurrentCity() != null ? location.getCurrentCity() : location.getSchoolCity();
-            }
+    public List<PartTimeJob> getRecommendations(Long userId, String status) {
+        // 强制从用户位置信息获取城市
+        UserLocation location = userLocationMapper.selectByUserId(userId);
+        String userCity = null;
+        if (location != null) {
+            userCity = location.getCurrentCity() != null ? location.getCurrentCity() : location.getSchoolCity();
+        }
+
+        // 如果用户没有设置城市，返回空列表
+        if (userCity == null || userCity.trim().isEmpty()) {
+            log.warn("用户 {} 未设置城市信息，无法获取兼职推荐", userId);
+            return java.util.Collections.emptyList();
         }
 
         // 构建查询条件
         QueryWrapper<PartTimeJob> wrapper = new QueryWrapper<>();
         wrapper.eq("status", status != null ? status : "ACTIVE");
         
-        if (city != null && !city.isEmpty()) {
-            wrapper.eq("city", city);
-        }
-        if (district != null && !district.isEmpty()) {
-            wrapper.eq("district", district);
-        }
-        if (jobType != null && !jobType.isEmpty()) {
-            wrapper.eq("job_type", jobType);
-        }
+        // 强制使用用户认证时保存的城市
+        wrapper.eq("city", userCity);
         
         wrapper.orderByDesc("created_at");
         

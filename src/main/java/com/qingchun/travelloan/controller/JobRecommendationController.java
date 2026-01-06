@@ -33,13 +33,10 @@ public class JobRecommendationController {
     @Operation(summary = "获取兼职推荐列表")
     @GetMapping("/recommendations")
     public Result<List<PartTimeJob>> getRecommendations(
-            @RequestParam(required = false) String city,
-            @RequestParam(required = false) String district,
-            @RequestParam(required = false) String jobType,
             @RequestParam(defaultValue = "ACTIVE") String status,
             Authentication authentication) {
         Long userId = (Long) authentication.getPrincipal();
-        List<PartTimeJob> jobs = jobRecommendationService.getRecommendations(userId, city, district, jobType, status);
+        List<PartTimeJob> jobs = jobRecommendationService.getRecommendations(userId, status);
         return Result.success(jobs);
     }
 
