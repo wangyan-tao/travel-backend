@@ -25,8 +25,10 @@ FROM openjdk:8-jre-slim
 # 设置工作目录
 WORKDIR /app
 
-# 安装必要的工具
-RUN apt-get update && \
+# 安装必要的工具（使用国内镜像源加速）
+RUN sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list && \
+    sed -i 's/security.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list && \
+    apt-get update && \
     apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
@@ -38,11 +40,11 @@ COPY --from=build /app/target/*.jar app.jar
 RUN mkdir -p /app/uploads && \
     chmod 777 /app/uploads
 
-# 暴露端口
-EXPOSE 9000
+# 暴露端口（应用运行在 9000 端口）
+EXPOSE 9001
 
 # 设置JVM参数
-ENV JAVA_OPTS="-Xms512m -Xmx1024m -XX:+UseG1GC"
+ENV JAVA_OPTS="-Xms256m -Xmx512m -XX:+UseG1GC"
 
 # 启动应用
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
