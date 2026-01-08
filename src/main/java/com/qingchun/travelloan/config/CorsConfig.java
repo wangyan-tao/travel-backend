@@ -19,15 +19,8 @@ public class CorsConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         
-        // 明确指定允许的源（当使用 allowCredentials 时不能使用通配符）
-        config.addAllowedOrigin("http://117.72.99.34");
-        config.addAllowedOrigin("http://117.72.99.34:80");
-        config.addAllowedOrigin("http://localhost");
-        config.addAllowedOrigin("http://localhost:3000");
-        config.addAllowedOrigin("http://localhost:80");
-        config.addAllowedOrigin("http://127.0.0.1");
-        config.addAllowedOrigin("http://127.0.0.1:3000");
-        config.addAllowedOrigin("http://127.0.0.1:80");
+        // 允许所有域名跨域
+        config.addAllowedOriginPattern("*");
         
         // 允许所有请求头
         config.addAllowedHeader("*");
@@ -40,7 +33,6 @@ public class CorsConfig {
         
         // 暴露的响应头
         config.addExposedHeader("Authorization");
-        config.addExposedHeader("Content-Type");
         
         // 预检请求的有效期（秒）
         config.setMaxAge(3600L);
