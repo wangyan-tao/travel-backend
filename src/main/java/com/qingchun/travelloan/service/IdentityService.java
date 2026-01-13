@@ -78,25 +78,52 @@ public class IdentityService {
             return;
         }
 
+        // 提取城市名称：如果格式是"省份-城市"，则只取城市部分
+        String cityName = extractCityName(city);
+        log.info("提取后的城市名称 - userId: {}, original: {}, extracted: {}", userId, city, cityName);
+
         try {
             UserLocation location = userLocationMapper.selectByUserId(userId);
             if (location == null) {
-                log.info("创建新的用户位置记录 - userId: {}, city: {}", userId, city);
+                log.info("创建新的用户位置记录 - userId: {}, city: {}", userId, cityName);
                 location = new UserLocation();
                 location.setUserId(userId);
-                location.setCurrentCity(city);
+                location.setCurrentCity(cityName);
                 userLocationMapper.insert(location);
-                log.info("用户位置记录创建成功 - userId: {}, city: {}", userId, city);
+                log.info("用户位置记录创建成功 - userId: {}, city: {}", userId, cityName);
             } else {
-                log.info("更新用户位置记录 - userId: {}, oldCity: {}, newCity: {}", userId, location.getCurrentCity(), city);
-                location.setCurrentCity(city);
+                log.info("更新用户位置记录 - userId: {}, oldCity: {}, newCity: {}", userId, location.getCurrentCity(), cityName);
+                location.setCurrentCity(cityName);
                 userLocationMapper.updateById(location);
-                log.info("用户位置记录更新成功 - userId: {}, city: {}", userId, city);
+                log.info("用户位置记录更新成功 - userId: {}, city: {}", userId, cityName);
             }
         } catch (Exception e) {
-            log.error("保存用户城市信息失败 - userId: {}, city: {}", userId, city, e);
+            log.error("保存用户城市信息失败 - userId: {}, city: {}", userId, cityName, e);
             throw new BusinessException("保存城市信息失败: " + e.getMessage());
         }
+    }
+
+    /**
+     * 从城市字符串中提取城市名称
+     * 如果格式是"省份-城市"，则返回城市部分；否则返回原字符串
+     * 例如："四川省-宜宾市" -> "宜宾市"
+     */
+    private String extractCityName(String city) {
+        if (city == null || city.trim().isEmpty()) {
+            return city;
+        }
+        
+        // 如果包含"-"分隔符，取最后一部分作为城市名称
+        if (city.contains("-")) {
+            String[] parts = city.split("-");
+            if (parts.length > 0) {
+                return parts[parts.length - 1].trim();
+            }
+        }
+        
+        // 对于直辖市（如"北京市"、"上海市"），直接返回
+        // 如果已经是纯城市名称，直接返回
+        return city.trim();
     }
 
     public UserIdentity getIdentity(Long userId) {
