@@ -36,9 +36,9 @@ public class LoanProductService {
         QueryWrapper<LoanProduct> wrapper = new QueryWrapper<>();
         wrapper.eq("status", "ACTIVE"); // ACTIVE表示上架
         if (productType != null && !productType.trim().isEmpty()) {
-            wrapper.eq("category", productType.trim());
+            wrapper.eq("product_type", productType.trim());
         }
-        wrapper.orderByAsc("id");
+        wrapper.orderByDesc("created_at");
         int offset = (currentPage - 1) * pageSize;
         wrapper.last("LIMIT " + offset + "," + pageSize);
         List<LoanProduct> products = loanProductMapper.selectList(wrapper);
