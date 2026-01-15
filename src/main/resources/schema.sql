@@ -73,6 +73,7 @@ CREATE TABLE IF NOT EXISTS `guarantor` (
 CREATE TABLE IF NOT EXISTS `user_location` ( 
      `id` BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID', 
      `user_id` BIGINT NOT NULL UNIQUE COMMENT '用户ID', 
+     `current_province` VARCHAR(50) COMMENT '当前所在省份', 
      `current_city` VARCHAR(50) COMMENT '当前所在城市', 
      `school_city` VARCHAR(50) COMMENT '学校所在城市', 
      `latitude` DECIMAL(10, 7) COMMENT '纬度', 
@@ -80,6 +81,7 @@ CREATE TABLE IF NOT EXISTS `user_location` (
      `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间', 
      `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间', 
      INDEX idx_user_id (`user_id`), 
+     INDEX idx_current_province (`current_province`), 
      INDEX idx_current_city (`current_city`), 
      INDEX idx_school_city (`school_city`), 
      FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE 
@@ -308,6 +310,34 @@ CREATE TABLE IF NOT EXISTS `evaluation_questionnaire` (
     INDEX idx_evaluation_level (`evaluation_level`),
     FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='测评问卷表';
+
+-- ============================================ 
+-- 14. 贷后风险用户表 
+-- ============================================
+CREATE TABLE IF NOT EXISTS `overdue_risk_user` (
+    `id` BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID',
+    `user_id` BIGINT NOT NULL COMMENT '用户ID',
+    `application_id` BIGINT NOT NULL COMMENT '申请ID',
+    `product_id` BIGINT NOT NULL COMMENT '产品ID',
+    `risk_level` VARCHAR(20) NOT NULL COMMENT '风险等级：低风险/中风险/高风险/严重风险',
+    `overdue_amount` DECIMAL(10, 2) NOT NULL DEFAULT 0 COMMENT '逾期金额',
+    `overdue_days` INT NOT NULL DEFAULT 0 COMMENT '逾期天数',
+    `last_repayment_date` DATE COMMENT '最后还款日期',
+    `total_overdue_amount` DECIMAL(10, 2) NOT NULL DEFAULT 0 COMMENT '累计逾期金额',
+    `overdue_count` INT NOT NULL DEFAULT 0 COMMENT '逾期次数',
+    `status` VARCHAR(20) NOT NULL DEFAULT 'ACTIVE' COMMENT '状态：ACTIVE-有效, RESOLVED-已解决',
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    INDEX idx_user_id (`user_id`),
+    INDEX idx_application_id (`application_id`),
+    INDEX idx_product_id (`product_id`),
+    INDEX idx_risk_level (`risk_level`),
+    INDEX idx_overdue_days (`overdue_days`),
+    INDEX idx_status (`status`),
+    FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`application_id`) REFERENCES `loan_application`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`product_id`) REFERENCES `loan_product`(`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='贷后风险用户表';
 
 -- 插入默认管理员账号（密码：admin123）
 INSERT INTO `user` (`username`, `password`, `phone`, `email`, `role`) 
