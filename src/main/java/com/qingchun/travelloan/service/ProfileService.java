@@ -6,9 +6,11 @@ import com.qingchun.travelloan.entity.Guarantor;
 import com.qingchun.travelloan.entity.LoanApplication;
 import com.qingchun.travelloan.entity.User;
 import com.qingchun.travelloan.entity.UserIdentity;
+import com.qingchun.travelloan.entity.UserLocation;
 import com.qingchun.travelloan.mapper.GuarantorMapper;
 import com.qingchun.travelloan.mapper.LoanApplicationMapper;
 import com.qingchun.travelloan.mapper.UserIdentityMapper;
+import com.qingchun.travelloan.mapper.UserLocationMapper;
 import com.qingchun.travelloan.mapper.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,9 @@ public class ProfileService {
     private GuarantorMapper guarantorMapper;
     @Autowired
     private LoanApplicationMapper loanApplicationMapper;
+    
+    @Autowired
+    private UserLocationMapper userLocationMapper;
 
     public ProfileDTO getProfile(Long userId) {
         User user = userMapper.selectById(userId);
@@ -32,12 +37,14 @@ public class ProfileService {
         Guarantor guarantor = guarantorMapper.selectOne(new QueryWrapper<Guarantor>().eq("user_id", userId));
         List<LoanApplication> loans = loanApplicationMapper.selectList(
                 new QueryWrapper<LoanApplication>().eq("user_id", userId).orderByDesc("apply_time"));
+        UserLocation location = userLocationMapper.selectByUserId(userId);
 
         ProfileDTO dto = new ProfileDTO();
         dto.setUser(user);
         dto.setIdentity(identity);
         dto.setGuarantor(guarantor);
         dto.setLoans(loans);
+        dto.setLocation(location);
         dto.setIdentityVerified(identity != null && "VERIFIED".equalsIgnoreCase(identity.getVerificationStatus()));
         dto.setGuarantorCompleted(guarantor != null
                 && guarantor.getName() != null

@@ -35,6 +35,12 @@ public class UserLocation implements Serializable {
     private Long userId;
 
     /**
+     * 当前所在省份
+     */
+    @TableField("current_province")
+    private String currentProvince;
+
+    /**
      * 当前所在城市
      */
     @TableField("current_city")

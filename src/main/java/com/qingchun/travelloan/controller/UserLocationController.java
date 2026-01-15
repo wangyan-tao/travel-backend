@@ -32,5 +32,19 @@ public class UserLocationController {
         UserLocation location = userLocationService.getUserLocation(userId);
         return Result.success(location);
     }
+
+    /**
+     * 更新用户位置信息
+     */
+    @Operation(summary = "更新用户位置信息")
+    @PutMapping
+    public Result<UserLocation> updateUserLocation(
+            @RequestParam(required = false) String province,
+            @RequestParam(required = false) String city,
+            Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
+        UserLocation location = userLocationService.updateUserLocation(userId, province, city);
+        return Result.success(location);
+    }
 }
 

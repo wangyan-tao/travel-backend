@@ -87,5 +87,20 @@ public class RepaymentController {
         RepaymentService.PrepayCalculationDTO result = repaymentService.calculatePrepayment(applicationId, prepayAmount, userId);
         return Result.success(result);
     }
+
+    @Operation(summary = "执行还款")
+    @PostMapping("/pay")
+    public Result<RepaymentRecord> executeRepayment(
+            @RequestParam Long planId,
+            @RequestParam String paymentMethod,
+            Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
+        // 验证支付方式
+        if (!"ALIPAY".equals(paymentMethod) && !"WECHAT".equals(paymentMethod)) {
+            return Result.error("支付方式无效，仅支持支付宝(ALIPAY)和微信(WECHAT)");
+        }
+        RepaymentRecord record = repaymentService.executeRepayment(planId, paymentMethod, userId);
+        return Result.success(record);
+    }
 }
 

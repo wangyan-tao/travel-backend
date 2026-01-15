@@ -312,6 +312,82 @@ public class RepaymentService {
     }
 
     /**
+     * 执行还款
+     * @param planId 还款计划ID
+     * @param paymentMethod 支付方式：ALIPAY-支付宝, WECHAT-微信
+     * @param userId 用户ID
+     * @return 还款记录
+     */
+    public RepaymentRecord executeRepayment(Long planId, String paymentMethod, Long userId) {
+        // 验证还款计划是否存在
+        RepaymentPlan plan = repaymentPlanMapper.selectById(planId);
+        if (plan == null) {
+            throw new BusinessException("还款计划不存在");
+        }
+
+        // 验证申请是否属于该用户
+        LoanApplication application = loanApplicationMapper.selectById(plan.getApplicationId());
+        if (application == null) {
+            throw new BusinessException("贷款申请不存在");
+        }
+        if (!application.getUserId().equals(userId)) {
+            throw new BusinessException("无权操作该还款计划");
+        }
+
+        // 验证还款计划状态
+        if ("PAID".equals(plan.getStatus())) {
+            throw new BusinessException("该期还款计划已完成，无需重复还款");
+        }
+
+        // 生成模拟交易流水号
+        String transactionId = generateTransactionId(paymentMethod);
+
+        // 创建还款记录
+        RepaymentRecord record = new RepaymentRecord();
+        record.setPlanId(planId);
+        record.setApplicationId(plan.getApplicationId());
+        record.setUserId(userId);
+        record.setPaymentAmount(plan.getTotalAmount());
+        record.setPaymentTime(LocalDateTime.now());
+        record.setPaymentMethod(paymentMethod);
+        record.setTransactionId(transactionId);
+        record.setCreatedAt(LocalDateTime.now());
+        record.setUpdatedAt(LocalDateTime.now());
+
+        repaymentRecordMapper.insert(record);
+
+        // 更新还款计划状态为已还款
+        plan.setStatus("PAID");
+        plan.setUpdatedAt(LocalDateTime.now());
+        repaymentPlanMapper.updateById(plan);
+
+        logger.info("用户 {} 通过 {} 完成还款计划 {} 的还款，金额：{}，交易流水：{}", 
+                userId, paymentMethod, planId, plan.getTotalAmount(), transactionId);
+
+        return record;
+    }
+
+    /**
+     * 生成模拟交易流水号
+     * @param paymentMethod 支付方式
+     * @return 交易流水号
+     */
+    private String generateTransactionId(String paymentMethod) {
+        String prefix;
+        if ("ALIPAY".equals(paymentMethod)) {
+            prefix = "ALIPAY";
+        } else if ("WECHAT".equals(paymentMethod)) {
+            prefix = "WECHAT";
+        } else {
+            prefix = "PAY";
+        }
+        // 生成格式：前缀 + 时间戳 + 6位随机数
+        long timestamp = System.currentTimeMillis();
+        int random = (int) (Math.random() * 1000000);
+        return String.format("%s%d%06d", prefix, timestamp, random);
+    }
+
+    /**
      * 提前还款测算
      * @param applicationId 申请ID
      * @param prepayAmount 提前还款金额
