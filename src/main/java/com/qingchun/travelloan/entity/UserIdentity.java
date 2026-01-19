@@ -1,5 +1,6 @@
 package com.qingchun.travelloan.entity;
 
+import com.baomidou.mybatisplus.annotation.FieldStrategy;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -29,16 +30,16 @@ public class UserIdentity implements Serializable {
     @TableField("id_card")
     private String idCard;
     
-    @TableField("student_id")
+    @TableField(value = "student_id", insertStrategy = FieldStrategy.IGNORED, updateStrategy = FieldStrategy.IGNORED)
     private String studentId;
     
     @TableField("university")
     private String university;
     
-    @TableField("major")
+    @TableField(value = "major", insertStrategy = FieldStrategy.IGNORED, updateStrategy = FieldStrategy.IGNORED)
     private String major;
     
-    @TableField("grade")
+    @TableField(value = "grade", insertStrategy = FieldStrategy.IGNORED, updateStrategy = FieldStrategy.IGNORED)
     private String grade;
     
     @TableField("id_card_front_url")
@@ -47,7 +48,7 @@ public class UserIdentity implements Serializable {
     @TableField("id_card_back_url")
     private String idCardBackUrl;
     
-    @TableField("student_card_url")
+    @TableField(value = "student_card_url", insertStrategy = FieldStrategy.IGNORED, updateStrategy = FieldStrategy.IGNORED)
     private String studentCardUrl;
     
     @TableField("verification_status")

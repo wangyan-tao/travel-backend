@@ -46,11 +46,13 @@ public class IdentityService {
         identity.setIdCard(request.getIdCard());
         identity.setIdCardFrontUrl(request.getIdCardFrontUrl());
         identity.setIdCardBackUrl(request.getIdCardBackUrl());
-        identity.setStudentId(request.getStudentId());
-        identity.setStudentCardUrl(request.getStudentCardUrl());
         identity.setUniversity(request.getUniversity());
-        identity.setMajor(request.getMajor());
-        identity.setGrade(request.getGrade());
+        // 以下字段已移除：studentId, studentCardUrl, major, grade
+        // 设置为默认值，避免数据库 NOT NULL 约束错误
+        identity.setStudentId("");
+        identity.setStudentCardUrl("");
+        identity.setMajor("");
+        identity.setGrade("");
 
         identity.setVerificationStatus("VERIFIED");
         identity.setVerifiedAt(LocalDateTime.now());
@@ -135,15 +137,12 @@ public class IdentityService {
     private void validateRequest(UserIdentity request) {
         if (isBlank(request.getRealName())
                 || isBlank(request.getIdCard())
-                || isBlank(request.getStudentId())
                 || isBlank(request.getUniversity())
-                || isBlank(request.getMajor())
-                || isBlank(request.getGrade())
         ) {
             throw new BusinessException("请完整填写必填信息");
         }
-        if (isBlank(request.getIdCardFrontUrl()) || isBlank(request.getIdCardBackUrl()) || isBlank(request.getStudentCardUrl())) {
-            throw new BusinessException("请上传身份证正反面和学生证照片");
+        if (isBlank(request.getIdCardFrontUrl()) || isBlank(request.getIdCardBackUrl())) {
+            throw new BusinessException("请上传身份证正反面照片");
         }
     }
 
